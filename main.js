@@ -65,13 +65,22 @@ var NowPlayingView = class extends import_obsidian.ItemView {
     });
   }
   async togglePlayback() {
-    await this.spotifyRequest("https://api.spotify.com/v1/me/player/play", "PUT");
+    await this.spotifyRequest(
+      "https://api.spotify.com/v1/me/player/play",
+      "PUT"
+    );
   }
   async nextTrack() {
-    await this.spotifyRequest("https://api.spotify.com/v1/me/player/next", "POST");
+    await this.spotifyRequest(
+      "https://api.spotify.com/v1/me/player/next",
+      "POST"
+    );
   }
   async previousTrack() {
-    await this.spotifyRequest("https://api.spotify.com/v1/me/player/previous", "POST");
+    await this.spotifyRequest(
+      "https://api.spotify.com/v1/me/player/previous",
+      "POST"
+    );
   }
   async spotifyRequest(url, method) {
     try {
@@ -93,6 +102,24 @@ var import_obsidian2 = require("obsidian");
 var DEFAULT_SETTINGS = {
   accessToken: ""
 };
+var SpotifySettingTab = class extends import_obsidian2.PluginSettingTab {
+  plugin;
+  constructor(app, plugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
+  display() {
+    const { containerEl } = this;
+    containerEl.empty();
+    new import_obsidian2.Setting(containerEl).setName("Spotify authentication").setHeading();
+    new import_obsidian2.Setting(containerEl).setName("Access token").setDesc("Paste your Spotify access token here.").addText(
+      (text) => text.setPlaceholder("Spotify access token").setValue(this.plugin.settings.accessToken).onChange(async (value) => {
+        this.plugin.settings.accessToken = value;
+        await this.plugin.saveSettings();
+      })
+    );
+  }
+};
 
 // src/main.ts
 var SpotifyControllerPlugin3 = class extends import_obsidian3.Plugin {
@@ -107,9 +134,17 @@ var SpotifyControllerPlugin3 = class extends import_obsidian3.Plugin {
     this.addRibbonIcon("music", "Spotify controller", () => {
       void this.activateView();
     });
+    this.addCommand({
+      id: "open-spotify-controller",
+      name: "Open Spotify controller",
+      callback: () => {
+        void this.activateView();
+      }
+    });
+    this.addSettingTab(new SpotifySettingTab(this.app, this));
   }
   onunload() {
-    console.debug("Unloading Spotify controller");
+    console.debug("Spotify controller unloaded");
   }
   async activateView() {
     const { workspace } = this.app;

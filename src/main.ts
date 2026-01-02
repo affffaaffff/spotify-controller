@@ -1,6 +1,6 @@
 import { Plugin, WorkspaceLeaf } from "obsidian";
 import { NowPlayingView, VIEW_TYPE_SPOTIFY } from "./nowplaying";
-import { SpotifySettings, DEFAULT_SETTINGS } from "./settings";
+import { SpotifySettingTab, SpotifySettings, DEFAULT_SETTINGS } from "./settings";
 
 export default class SpotifyControllerPlugin extends Plugin {
   settings: SpotifySettings;
@@ -18,10 +18,20 @@ export default class SpotifyControllerPlugin extends Plugin {
     this.addRibbonIcon("music", "Spotify controller", () => {
       void this.activateView();
     });
+
+    this.addCommand({
+      id: "open-spotify-controller",
+      name: "Open Spotify controller",
+      callback: () => {
+        void this.activateView();
+      }
+    });
+
+    this.addSettingTab(new SpotifySettingTab(this.app, this));
   }
 
   onunload(): void {
-    console.debug("Unloading Spotify controller");
+    console.debug("Spotify controller unloaded");
   }
 
   async activateView(): Promise<void> {

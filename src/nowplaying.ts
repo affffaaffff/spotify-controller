@@ -55,18 +55,27 @@ export class NowPlayingView extends ItemView {
   }
 
   async togglePlayback(): Promise<void> {
-    await this.spotifyRequest("https://api.spotify.com/v1/me/player/play", "PUT");
+    await this.spotifyRequest(
+      "https://api.spotify.com/v1/me/player/play",
+      "PUT"
+    );
   }
 
   async nextTrack(): Promise<void> {
-    await this.spotifyRequest("https://api.spotify.com/v1/me/player/next", "POST");
+    await this.spotifyRequest(
+      "https://api.spotify.com/v1/me/player/next",
+      "POST"
+    );
   }
 
   async previousTrack(): Promise<void> {
-    await this.spotifyRequest("https://api.spotify.com/v1/me/player/previous", "POST");
+    await this.spotifyRequest(
+      "https://api.spotify.com/v1/me/player/previous",
+      "POST"
+    );
   }
 
-  async spotifyRequest(url: string, method: string): Promise<void> {
+  private async spotifyRequest(url: string, method: string): Promise<void> {
     try {
       await requestUrl({
         url,
