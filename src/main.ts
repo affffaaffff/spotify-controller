@@ -1,67 +1,46 @@
 import { Plugin, WorkspaceLeaf } from "obsidian";
-import { NowPlayingView, NOW_PLAYING_VIEW_TYPE } from "./nowplaying";
-import {
-	SpotifySettingTab,
-	DEFAULT_SETTINGS,
-	SpotifySettings,
-} from "./settings";
-import { setPluginInstance } from "./spotify";
+import { NowPlayingView, VIEW_TYPE_SPOTIFY } from "./nowplaying";
+import { SpotifySettings, DEFAULT_SETTINGS } from "./settings";
 
 export default class SpotifyControllerPlugin extends Plugin {
-	settings: SpotifySettings;
+  settings: SpotifySettings;
 
-	async onload() {
-		console.log("Spotify Controller Plugin loading...");
+  async onload(): Promise<void> {
+    console.debug("Loading Spotify controller");
 
-		await this.loadSettings();
-		this.addSettingTab(new SpotifySettingTab(this.app, this));
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 
-		setPluginInstance(this);
+    this.registerView(
+      VIEW_TYPE_SPOTIFY,
+      (leaf: WorkspaceLeaf) => new NowPlayingView(leaf, this)
+    );
 
-		this.registerView(
-			NOW_PLAYING_VIEW_TYPE,
-			(leaf: WorkspaceLeaf) => new NowPlayingView(leaf)
-		);
+    this.addRibbonIcon("music", "Spotify controller", () => {
+      void this.activateView();
+    });
+  }
 
-		this.addRibbonIcon("music", "Spotify Controller", async () => {
-			await this.activateView();
-		});
+  onunload(): void {
+    console.debug("Unloading Spotify controller");
+  }
 
-		this.app.workspace.onLayoutReady(() => {
-			this.activateView();
-		});
+  async activateView(): Promise<void> {
+    const { workspace } = this.app;
 
-		console.log("Spotify Controller Plugin loaded.");
-	}
+    let leaf = workspace.getLeavesOfType(VIEW_TYPE_SPOTIFY)[0];
 
-	onunload() {
-		this.app.workspace.detachLeavesOfType(NOW_PLAYING_VIEW_TYPE);
-	}
+    if (!leaf) {
+      leaf = workspace.getRightLeaf(false);
+      await leaf.setViewState({
+        type: VIEW_TYPE_SPOTIFY,
+        active: true
+      });
+    }
 
-	async activateView() {
-		const workspace = this.app.workspace;
+    workspace.revealLeaf(leaf);
+  }
 
-		let leaf = workspace.getLeavesOfType(NOW_PLAYING_VIEW_TYPE)[0];
-		if (!leaf) {
-			leaf = workspace.getRightLeaf(false);
-			await leaf.setViewState({
-				type: NOW_PLAYING_VIEW_TYPE,
-				active: true,
-			});
-		}
-
-		workspace.revealLeaf(leaf);
-	}
-
-	async loadSettings() {
-		this.settings = Object.assign(
-			{},
-			DEFAULT_SETTINGS,
-			await this.loadData()
-		);
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
+  async saveSettings(): Promise<void> {
+    await this.saveData(this.settings);
+  }
 }
